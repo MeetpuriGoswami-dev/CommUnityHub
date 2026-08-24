@@ -1,0 +1,2502 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: CommUnity Hub API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: organizations
+    description: NGO Organization management
+  - name: needs
+    description: Community needs reports
+  - name: volunteers
+    description: Volunteer management
+  - name: tasks
+    description: Task lifecycle management
+  - name: surveys
+    description: Survey builder and responses
+  - name: dashboard
+    description: Dashboard stats and summaries
+  - name: chat
+    description: AI chat assistant
+  - name: smart-hub
+    description: Smart Hub file management and intelligence
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ── Organizations ──────────────────────────────────────────────────────────
+  /organizations:
+    get:
+      operationId: listOrganizations
+      tags: [organizations]
+      summary: List all organizations
+      responses:
+        "200":
+          description: List of organizations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Organization"
+    post:
+      operationId: createOrganization
+      tags: [organizations]
+      summary: Create organization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrganizationBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Organization"
+
+  /organizations/{id}:
+    get:
+      operationId: getOrganization
+      tags: [organizations]
+      summary: Get organization
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Organization
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Organization"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Needs ───────────────────────────────────────────────────────────────────
+  /needs:
+    get:
+      operationId: listNeeds
+      tags: [needs]
+      summary: List all community needs
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: severity
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: area
+          in: query
+          schema:
+            type: string
+        - name: organizationId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of needs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Need"
+    post:
+      operationId: createNeed
+      tags: [needs]
+      summary: Create a community need report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateNeedBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Need"
+
+  /needs/urgent:
+    get:
+      operationId: listUrgentNeeds
+      tags: [needs]
+      summary: Get ranked list of most urgent needs
+      responses:
+        "200":
+          description: Urgent needs ranked by score
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Need"
+
+  /needs/map:
+    get:
+      operationId: getNeedsMapData
+      tags: [needs]
+      summary: Get all needs with coordinates for map display
+      responses:
+        "200":
+          description: Map data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NeedMapPoint"
+
+  /needs/heatmap:
+    get:
+      operationId: getHeatmapData
+      tags: [needs]
+      summary: Get zone-level heatmap aggregation data
+      responses:
+        "200":
+          description: Heatmap zones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HeatmapZone"
+
+  /needs/{id}:
+    get:
+      operationId: getNeed
+      tags: [needs]
+      summary: Get a specific need
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Need
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Need"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateNeed
+      tags: [needs]
+      summary: Update a need
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateNeedBody"
+      responses:
+        "200":
+          description: Updated need
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Need"
+
+  /needs/{id}/status:
+    patch:
+      operationId: updateNeedStatus
+      tags: [needs]
+      summary: Update need status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateNeedStatusBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Need"
+
+  /needs/{id}/assign:
+    post:
+      operationId: assignVolunteerToNeed
+      tags: [needs]
+      summary: Assign a volunteer to a need
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignVolunteerBody"
+      responses:
+        "200":
+          description: Assignment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Need"
+
+  /needs/{id}/assign-bulk:
+    post:
+      operationId: assignVolunteersBulk
+      tags: [needs]
+      summary: Assign multiple volunteers to a need
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                volunteerIds:
+                  type: array
+                  items:
+                    type: integer
+              required: [volunteerIds]
+      responses:
+        "200":
+          description: Bulk assignment result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  need:
+                    $ref: "#/components/schemas/Need"
+                  assignedCount:
+                    type: integer
+                required: [need, assignedCount]
+
+  /needs/{id}/assignments:
+    get:
+      operationId: listNeedAssignments
+      tags: [needs]
+      summary: List all volunteers assigned to a need
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Assignments for the need
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    assignmentId:
+                      type: integer
+                    volunteerId:
+                      type: integer
+                    volunteerName:
+                      type: string
+                    status:
+                      type: string
+                    progress:
+                      type: integer
+                    notes:
+                      type: ["string", "null"]
+                  required: [assignmentId, volunteerId, volunteerName, status, progress]
+
+  /assignments/{id}/progress:
+    patch:
+      operationId: updateAssignmentProgress
+      tags: [needs]
+      summary: Update progress on an assignment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                progress:
+                  type: integer
+                  minimum: 0
+                  maximum: 100
+                note:
+                  type: ["string", "null"]
+              required: [progress]
+      responses:
+        "200":
+          description: Progress updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assignmentId:
+                    type: integer
+                  progress:
+                    type: integer
+                  needProgress:
+                    type: integer
+                required: [assignmentId, progress, needProgress]
+
+  /needs/{id}/geocode:
+    post:
+      operationId: geocodeNeed
+      tags: [needs]
+      summary: Re-run Nominatim geocoding for a need
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Geocode result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  latitude:
+                    type: ["number", "null"]
+                  longitude:
+                    type: ["number", "null"]
+                  found:
+                    type: boolean
+                required: [found]
+
+  /needs/{id}/volunteers:
+    get:
+      operationId: getMatchedVolunteers
+      tags: [needs]
+      summary: Get AI-matched volunteers for a need
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Ranked volunteer matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VolunteerMatch"
+
+  /needs/{id}/audit:
+    get:
+      operationId: getNeedAuditTrail
+      tags: [needs]
+      summary: Get full audit trail for a need
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Audit trail
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditEntry"
+
+  /needs/bulk:
+    post:
+      operationId: bulkCreateNeeds
+      tags: [needs]
+      summary: Bulk create needs from CSV data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkCreateNeedsBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkCreateResult"
+
+  # ── Volunteers ──────────────────────────────────────────────────────────────
+  /volunteers:
+    get:
+      operationId: listVolunteers
+      tags: [volunteers]
+      summary: List all volunteers
+      parameters:
+        - name: organizationId
+          in: query
+          schema:
+            type: integer
+        - name: available
+          in: query
+          schema:
+            type: boolean
+        - name: skill
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of volunteers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Volunteer"
+    post:
+      operationId: createVolunteer
+      tags: [volunteers]
+      summary: Register a volunteer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVolunteerBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Volunteer"
+
+  /volunteers/{id}:
+    get:
+      operationId: getVolunteer
+      tags: [volunteers]
+      summary: Get volunteer profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Volunteer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Volunteer"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateVolunteer
+      tags: [volunteers]
+      summary: Update volunteer profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVolunteerBody"
+      responses:
+        "200":
+          description: Updated volunteer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Volunteer"
+
+  /volunteers/{id}/tasks:
+    get:
+      operationId: getVolunteerTasks
+      tags: [volunteers]
+      summary: Get tasks assigned to a volunteer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Assigned tasks/needs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Need"
+
+  /volunteers/{id}/impact:
+    get:
+      operationId: getVolunteerImpact
+      tags: [volunteers]
+      summary: Get volunteer impact summary
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Impact card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VolunteerImpact"
+
+  /volunteers/{id}/nearby-tasks:
+    get:
+      operationId: getVolunteerNearbyTasks
+      tags: [volunteers]
+      summary: Get tasks near volunteer's location
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Nearby task matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NeedMatch"
+
+  # ── Surveys ─────────────────────────────────────────────────────────────────
+  /surveys:
+    get:
+      operationId: listSurveys
+      tags: [surveys]
+      summary: List all surveys
+      parameters:
+        - name: organizationId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of surveys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Survey"
+    post:
+      operationId: createSurvey
+      tags: [surveys]
+      summary: Create a survey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSurveyBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Survey"
+
+  /surveys/{id}:
+    get:
+      operationId: getSurvey
+      tags: [surveys]
+      summary: Get a survey
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Survey
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Survey"
+
+  /surveys/{id}/responses:
+    get:
+      operationId: listSurveyResponses
+      tags: [surveys]
+      summary: List responses for a survey
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Survey responses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SurveyResponse"
+    post:
+      operationId: submitSurveyResponse
+      tags: [surveys]
+      summary: Submit a survey response
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitSurveyResponseBody"
+      responses:
+        "201":
+          description: Response submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurveyResponse"
+
+  /surveys/{id}/quality:
+    get:
+      operationId: getSurveyQuality
+      tags: [surveys]
+      summary: Get data quality score for a survey
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Quality report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurveyQualityReport"
+
+  /surveys/generate:
+    post:
+      operationId: generateSurvey
+      tags: [surveys]
+      summary: AI-generate a survey from plain language description
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateSurveyBody"
+      responses:
+        "200":
+          description: Generated survey template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeneratedSurveyTemplate"
+
+  # ── Dashboard ────────────────────────────────────────────────────────────────
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get coordinator dashboard statistics
+      parameters:
+        - name: organizationId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent activity feed
+      parameters:
+        - name: organizationId
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Activity feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /dashboard/zones:
+    get:
+      operationId: getZoneBreakdown
+      tags: [dashboard]
+      summary: Get zone-level breakdown of needs
+      parameters:
+        - name: organizationId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Zone breakdown
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ZoneSummary"
+
+  /dashboard/insights:
+    get:
+      operationId: getDashboardInsights
+      tags: [dashboard]
+      summary: Get AI-generated anomaly/trend insight cards
+      parameters:
+        - name: organizationId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Insight cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InsightCard"
+
+  # ── AI Chat ──────────────────────────────────────────────────────────────────
+  /chat:
+    post:
+      operationId: sendChatMessage
+      tags: [chat]
+      summary: Send message to AI assistant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatMessageBody"
+      responses:
+        "200":
+          description: AI response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatResponse"
+
+  # ── Volunteer Notifications ─────────────────────────────────────────────────
+  /volunteers/{id}/notifications:
+    get:
+      operationId: getVolunteerNotifications
+      tags: [volunteers]
+      summary: Get notifications for a volunteer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VolunteerNotification"
+
+  /volunteers/{id}/notifications/mark-read:
+    post:
+      operationId: markNotificationsRead
+      tags: [volunteers]
+      summary: Mark all notifications as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                required: [ok]
+
+  /volunteers/{id}/self-assign:
+    post:
+      operationId: volunteerSelfAssign
+      tags: [volunteers]
+      summary: Self-assign a volunteer to a need
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SelfAssignBody"
+      responses:
+        "200":
+          description: Updated need
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Need"
+
+  /volunteers/pending-assignments:
+    get:
+      operationId: getPendingAssignments
+      tags: [volunteers]
+      summary: Get pending volunteer self-assignment requests
+      parameters:
+        - name: organizationId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Pending assignments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PendingAssignment"
+
+  /volunteers/assignments/{id}/approve:
+    post:
+      operationId: approveAssignment
+      tags: [volunteers]
+      summary: Approve a volunteer self-assignment request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required: [message]
+
+  /volunteers/assignments/{id}/decline:
+    post:
+      operationId: declineAssignment
+      tags: [volunteers]
+      summary: Decline a volunteer self-assignment request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+              required: [reason]
+      responses:
+        "200":
+          description: Declined
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required: [message]
+
+  /volunteers/{id}/status:
+    patch:
+      operationId: updateVolunteerStatus
+      tags: [volunteers]
+      summary: Update volunteer availability status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVolunteerStatusBody"
+      responses:
+        "200":
+          description: Updated volunteer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Volunteer"
+
+  /volunteers/{id}/reset-password:
+    post:
+      operationId: adminResetVolunteerPassword
+      tags: [volunteers]
+      summary: Admin reset volunteer password
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordBody"
+      responses:
+        "200":
+          description: Password reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResetPasswordResponse"
+
+  /volunteers/{id}/deactivate:
+    post:
+      operationId: deactivateVolunteer
+      tags: [volunteers]
+      summary: Deactivate a volunteer with task guard
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeactivateVolunteerBody"
+      responses:
+        "200":
+          description: Deactivation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeactivateVolunteerResponse"
+
+  /volunteers/{id}/credential-log:
+    get:
+      operationId: getVolunteerCredentialLog
+      tags: [volunteers]
+      summary: Get credential email audit log for a volunteer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Log entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CredentialLogEntry"
+
+  /volunteers/{id}/profile:
+    patch:
+      operationId: updateVolunteerProfile
+      tags: [volunteers]
+      summary: Volunteer self-update profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVolunteerProfileBody"
+      responses:
+        "200":
+          description: Updated volunteer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Volunteer"
+
+  # ── Needs extended ────────────────────────────────────────────────────────────
+  /needs/{id}/volunteer-note:
+    patch:
+      operationId: updateNeedVolunteerNote
+      tags: [needs]
+      summary: Volunteer updates completion note on a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCompletionNoteBody"
+      responses:
+        "200":
+          description: Updated need
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Need"
+
+  /needs/{id}/task-status:
+    patch:
+      operationId: updateNeedTaskStatus
+      tags: [needs]
+      summary: Volunteer updates task status (start / complete)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskStatusBody"
+      responses:
+        "200":
+          description: Updated need
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Need"
+
+  # ── Auth ─────────────────────────────────────────────────────────────────────
+  /auth/me:
+    get:
+      operationId: getAuthMe
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthMeResponse"
+
+  /auth/login:
+    post:
+      operationId: authLogin
+      tags: [auth]
+      summary: Log in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUserResponse"
+
+  /auth/logout:
+    post:
+      operationId: authLogout
+      tags: [auth]
+      summary: Log out
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                required: [ok]
+
+  /auth/change-password:
+    post:
+      operationId: authChangePassword
+      tags: [auth]
+      summary: Change password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordBody"
+      responses:
+        "200":
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUserResponse"
+
+  # ── Smart Drive ─────────────────────────────────────────────────────────────
+  /smart-drive:
+    get:
+      operationId: listSmartDriveFiles
+      tags: [smart-hub]
+      summary: List files in Smart Drive for an organization
+      parameters:
+        - name: organizationId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of files
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SmartDriveFile"
+
+  /smart-drive/upload:
+    post:
+      operationId: uploadSmartDriveFile
+      tags: [smart-hub]
+      summary: Upload a file to Smart Drive
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                organizationId:
+                  type: integer
+                file:
+                  type: string
+                  format: binary
+              required: [organizationId, file]
+      responses:
+        "201":
+          description: File uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SmartDriveFile"
+
+  /smart-drive/{id}:
+    patch:
+      operationId: updateSmartDriveFile
+      tags: [smart-hub]
+      summary: Update file visibility and status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                isVisibleToVolunteers:
+                  type: boolean
+                status:
+                  type: string
+                  enum: [approved, pending, rejected]
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SmartDriveFile"
+    delete:
+      operationId: deleteSmartDriveFile
+      tags: [smart-hub]
+      summary: Delete a file from Smart Drive
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Need Attachments ────────────────────────────────────────────────────────
+  /needs/{id}/attachments:
+    get:
+      operationId: listNeedAttachments
+      tags: [needs]
+      summary: List all attachments for a need
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of attachments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NeedAttachment"
+    post:
+      operationId: uploadNeedAttachment
+      tags: [needs]
+      summary: Upload an attachment for a need
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required: [file]
+      responses:
+        "201":
+          description: Attachment uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NeedAttachment"
+
+  /attachments/{id}:
+    delete:
+      operationId: deleteNeedAttachment
+      tags: [needs]
+      summary: Delete an attachment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    SmartDriveFile:
+      type: object
+      properties:
+        id:
+          type: integer
+        organizationId:
+          type: integer
+        fileName:
+          type: string
+        filePath:
+          type: string
+        fileType:
+          type: string
+        fileSize:
+          type: integer
+        uploadedBy:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        isVisibleToVolunteers:
+          type: boolean
+        status:
+          type: string
+          enum: [approved, pending, rejected]
+      required: [id, organizationId, fileName, filePath, fileType, fileSize, uploadedBy, createdAt, isVisibleToVolunteers, status]
+
+    NeedAttachment:
+      type: object
+      properties:
+        id:
+          type: integer
+        needId:
+          type: integer
+        fileName:
+          type: string
+        filePath:
+          type: string
+        fileType:
+          type: string
+        fileSize:
+          type: integer
+        uploadedBy:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, needId, fileName, filePath, fileType, fileSize, uploadedBy, createdAt]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    Organization:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        contactEmail:
+          type: ["string", "null"]
+        contactPhone:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, createdAt]
+
+    CreateOrganizationBody:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        contactEmail:
+          type: ["string", "null"]
+        contactPhone:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+      required: [name]
+
+    Need:
+      type: object
+      properties:
+        id:
+          type: integer
+        organizationId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        category:
+          type: string
+          enum: [food, medical, shelter, education, water, sanitation, clothing, livelihood, other]
+        severity:
+          type: string
+          enum: [critical, high, medium, low]
+        status:
+          type: string
+          enum: [reported, verified, assigned, in_progress, resolved, closed]
+        area:
+          type: string
+        zone:
+          type: ["string", "null"]
+        affectedCount:
+          type: integer
+        latitude:
+          type: ["number", "null"]
+        longitude:
+          type: ["number", "null"]
+        urgencyScore:
+          type: ["number", "null"]
+        reporterName:
+          type: ["string", "null"]
+        sourceType:
+          type: string
+          enum: [manual, csv, ocr, voice]
+        resolutionNote:
+          type: ["string", "null"]
+        assignedVolunteerId:
+          type: ["integer", "null"]
+        assignedVolunteerName:
+          type: ["string", "null"]
+        daysUnresolved:
+          type: ["integer", "null"]
+        reportDate:
+          type: string
+          format: date-time
+        needDate:
+          type: ["string", "null"]
+          format: date
+        daysRequired:
+          type: array
+          items:
+            type: string
+        startTime:
+          type: ["string", "null"]
+        endTime:
+          type: ["string", "null"]
+        recurring:
+          type: boolean
+        recurrenceNote:
+          type: ["string", "null"]
+        requiredSkills:
+          type: array
+          items:
+            type: string
+        volunteerProgress:
+          type: integer
+        geocodingFailed:
+          type: boolean
+        coordinatesLocked:
+          type: boolean
+        assignedVolunteersCount:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, organizationId, title, category, severity, status, area, affectedCount, sourceType, reportDate, createdAt, updatedAt]
+
+    CreateNeedBody:
+      type: object
+      properties:
+        organizationId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        category:
+          type: string
+          enum: [food, medical, shelter, education, water, sanitation, clothing, livelihood, other]
+        severity:
+          type: string
+          enum: [critical, high, medium, low]
+        area:
+          type: string
+        zone:
+          type: ["string", "null"]
+        affectedCount:
+          type: integer
+        latitude:
+          type: ["number", "null"]
+        longitude:
+          type: ["number", "null"]
+        reporterName:
+          type: ["string", "null"]
+        sourceType:
+          type: string
+          enum: [manual, csv, ocr, voice]
+        reportDate:
+          type: string
+          format: date-time
+        needDate:
+          type: ["string", "null"]
+          format: date
+        daysRequired:
+          type: array
+          items:
+            type: string
+        startTime:
+          type: ["string", "null"]
+        endTime:
+          type: ["string", "null"]
+        recurring:
+          type: boolean
+        recurrenceNote:
+          type: ["string", "null"]
+        requiredSkills:
+          type: array
+          items:
+            type: string
+        coordinatesLocked:
+          type: boolean
+      required: [organizationId, title, category, severity, area, affectedCount, sourceType, reportDate]
+
+    UpdateNeedBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        category:
+          type: string
+        severity:
+          type: string
+        area:
+          type: string
+        zone:
+          type: ["string", "null"]
+        affectedCount:
+          type: integer
+        latitude:
+          type: ["number", "null"]
+        longitude:
+          type: ["number", "null"]
+        needDate:
+          type: ["string", "null"]
+          format: date
+        daysRequired:
+          type: array
+          items:
+            type: string
+        startTime:
+          type: ["string", "null"]
+        endTime:
+          type: ["string", "null"]
+        recurring:
+          type: boolean
+        recurrenceNote:
+          type: ["string", "null"]
+        requiredSkills:
+          type: array
+          items:
+            type: string
+        coordinatesLocked:
+          type: boolean
+
+    UpdateNeedStatusBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [reported, verified, assigned, in_progress, resolved, closed]
+        resolutionNote:
+          type: ["string", "null"]
+      required: [status]
+
+    AssignVolunteerBody:
+      type: object
+      properties:
+        volunteerId:
+          type: integer
+      required: [volunteerId]
+
+    NeedMapPoint:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        category:
+          type: string
+        severity:
+          type: string
+        status:
+          type: string
+        affectedCount:
+          type: integer
+        latitude:
+          type: number
+        longitude:
+          type: number
+        urgencyScore:
+          type: ["number", "null"]
+        daysUnresolved:
+          type: ["integer", "null"]
+        area:
+          type: string
+      required: [id, title, category, severity, status, affectedCount, latitude, longitude, area]
+
+    HeatmapZone:
+      type: object
+      properties:
+        zone:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        totalUrgencyScore:
+          type: number
+        needsCount:
+          type: integer
+        criticalCount:
+          type: integer
+      required: [zone, latitude, longitude, totalUrgencyScore, needsCount, criticalCount]
+
+    VolunteerMatch:
+      type: object
+      properties:
+        volunteerId:
+          type: integer
+        name:
+          type: string
+        matchScore:
+          type: number
+        locationScore:
+          type: number
+        skillScore:
+          type: number
+        availabilityScore:
+          type: number
+        completionRateScore:
+          type: number
+        skills:
+          type: array
+          items:
+            type: string
+        availabilityStatus:
+          type: string
+        area:
+          type: string
+        tasksCompleted:
+          type: integer
+      required: [volunteerId, name, matchScore, locationScore, skillScore, availabilityScore, completionRateScore, skills, availabilityStatus, area, tasksCompleted]
+
+    PendingAssignment:
+      type: object
+      properties:
+        id:
+          type: integer
+        volunteerName:
+          type: string
+        volunteerSkills:
+          type: array
+          items:
+            type: string
+        needTitle:
+          type: string
+        needCategory:
+          type: string
+        needSeverity:
+          type: string
+        needArea:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        volunteerId:
+          type: integer
+        needId:
+          type: integer
+      required: [id, volunteerName, volunteerSkills, needTitle, needCategory, needSeverity, needArea, createdAt, volunteerId, needId]
+
+    NeedMatch:
+      type: object
+      properties:
+        needId:
+          type: integer
+        title:
+          type: string
+        category:
+          type: string
+        severity:
+          type: string
+        area:
+          type: string
+        affectedCount:
+          type: integer
+        matchScore:
+          type: number
+      required: [needId, title, category, severity, area, affectedCount, matchScore]
+
+    AuditEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        needId:
+          type: integer
+        action:
+          type: string
+        oldValue:
+          type: ["string", "null"]
+        newValue:
+          type: ["string", "null"]
+        performedBy:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, needId, action, createdAt]
+
+    BulkCreateNeedsBody:
+      type: object
+      properties:
+        organizationId:
+          type: integer
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateNeedBody"
+      required: [organizationId, rows]
+
+    BulkCreateResult:
+      type: object
+      properties:
+        created:
+          type: integer
+        failed:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: string
+      required: [created, failed, errors]
+
+    Volunteer:
+      type: object
+      properties:
+        id:
+          type: integer
+        organizationId:
+          type: ["integer", "null"]
+        name:
+          type: string
+        email:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        area:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+        languages:
+          type: array
+          items:
+            type: string
+        availabilityStatus:
+          type: string
+          enum: [available, busy, on_task]
+        availabilityDays:
+          type: array
+          items:
+            type: string
+        tasksCompleted:
+          type: integer
+        tasksAssigned:
+          type: integer
+        completionRate:
+          type: number
+        latitude:
+          type: ["number", "null"]
+        longitude:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, area, skills, languages, availabilityStatus, availabilityDays, tasksCompleted, tasksAssigned, completionRate, createdAt]
+
+    CreateVolunteerBody:
+      type: object
+      properties:
+        organizationId:
+          type: ["integer", "null"]
+        name:
+          type: string
+        email:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        area:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+        languages:
+          type: array
+          items:
+            type: string
+        availabilityDays:
+          type: array
+          items:
+            type: string
+        latitude:
+          type: ["number", "null"]
+        longitude:
+          type: ["number", "null"]
+      required: [name, area, skills, languages, availabilityDays]
+
+    UpdateVolunteerBody:
+      type: object
+      properties:
+        availabilityStatus:
+          type: string
+          enum: [available, busy, on_task]
+        skills:
+          type: array
+          items:
+            type: string
+        area:
+          type: string
+        availabilityDays:
+          type: array
+          items:
+            type: string
+
+    VolunteerImpact:
+      type: object
+      properties:
+        volunteerId:
+          type: integer
+        name:
+          type: string
+        tasksCompleted:
+          type: integer
+        peopleHelped:
+          type: integer
+        hoursContributed:
+          type: number
+        topCategories:
+          type: array
+          items:
+            type: string
+        impactStatement:
+          type: string
+      required: [volunteerId, name, tasksCompleted, peopleHelped, hoursContributed, topCategories, impactStatement]
+
+    Survey:
+      type: object
+      properties:
+        id:
+          type: integer
+        organizationId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/SurveyField"
+        responseCount:
+          type: integer
+        qualityScore:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, organizationId, title, fields, responseCount, createdAt]
+
+    SurveyField:
+      type: object
+      properties:
+        name:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+          enum: [text, number, select, multiselect, date, boolean]
+        required:
+          type: boolean
+        options:
+          type: ["array", "null"]
+          items:
+            type: string
+        validationRule:
+          type: ["string", "null"]
+      required: [name, label, type, required]
+
+    CreateSurveyBody:
+      type: object
+      properties:
+        organizationId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/SurveyField"
+      required: [organizationId, title, fields]
+
+    SurveyResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        surveyId:
+          type: integer
+        data:
+          type: object
+          additionalProperties: true
+        qualityFlags:
+          type: array
+          items:
+            type: string
+        submittedAt:
+          type: string
+          format: date-time
+      required: [id, surveyId, data, qualityFlags, submittedAt]
+
+    SubmitSurveyResponseBody:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+      required: [data]
+
+    SurveyQualityReport:
+      type: object
+      properties:
+        surveyId:
+          type: integer
+        totalResponses:
+          type: integer
+        qualityScore:
+          type: number
+        flaggedCount:
+          type: integer
+        incompleteCount:
+          type: integer
+        duplicateSuspectCount:
+          type: integer
+        inconsistentCount:
+          type: integer
+        issues:
+          type: array
+          items:
+            type: string
+      required: [surveyId, totalResponses, qualityScore, flaggedCount, incompleteCount, duplicateSuspectCount, inconsistentCount, issues]
+
+    GenerateSurveyBody:
+      type: object
+      properties:
+        description:
+          type: string
+        organizationId:
+          type: integer
+      required: [description, organizationId]
+
+    GeneratedSurveyTemplate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/SurveyField"
+      required: [title, description, fields]
+
+    DashboardStats:
+      type: object
+      properties:
+        totalActiveNeeds:
+          type: integer
+        criticalNeeds:
+          type: integer
+        resolvedThisWeek:
+          type: integer
+        resolvedLastWeek:
+          type: integer
+        totalVolunteers:
+          type: integer
+        availableVolunteers:
+          type: integer
+        volunteerUtilizationRate:
+          type: number
+        needsByCategory:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryCount"
+        needsBySeverity:
+          type: array
+          items:
+            $ref: "#/components/schemas/SeverityCount"
+        unresolvedAvgDays:
+          type: number
+      required: [totalActiveNeeds, criticalNeeds, resolvedThisWeek, resolvedLastWeek, totalVolunteers, availableVolunteers, volunteerUtilizationRate, needsByCategory, needsBySeverity, unresolvedAvgDays]
+
+    CategoryCount:
+      type: object
+      properties:
+        category:
+          type: string
+        count:
+          type: integer
+      required: [category, count]
+
+    SeverityCount:
+      type: object
+      properties:
+        severity:
+          type: string
+        count:
+          type: integer
+      required: [severity, count]
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        message:
+          type: string
+        entityId:
+          type: ["integer", "null"]
+        entityType:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, type, message, createdAt]
+
+    ZoneSummary:
+      type: object
+      properties:
+        zone:
+          type: string
+        totalNeeds:
+          type: integer
+        criticalNeeds:
+          type: integer
+        resolvedNeeds:
+          type: integer
+        urgencyScore:
+          type: number
+        topCategory:
+          type: ["string", "null"]
+      required: [zone, totalNeeds, criticalNeeds, resolvedNeeds, urgencyScore]
+
+    InsightCard:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        severity:
+          type: string
+          enum: [info, warning, critical]
+        category:
+          type: ["string", "null"]
+        zone:
+          type: ["string", "null"]
+        changePercent:
+          type: ["number", "null"]
+      required: [id, title, description, severity]
+
+    ChatMessageBody:
+      type: object
+      properties:
+        message:
+          type: string
+        organizationId:
+          type: ["integer", "null"]
+        history:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatHistoryItem"
+      required: [message]
+
+    ChatHistoryItem:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+      required: [role, content]
+
+    ChatResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        quickPrompts:
+          type: array
+          items:
+            type: string
+      required: [message, quickPrompts]
+
+    VolunteerNotification:
+      type: object
+      properties:
+        id:
+          type: integer
+        volunteerId:
+          type: integer
+        title:
+          type: string
+        message:
+          type: string
+        type:
+          type: string
+        relatedNeedId:
+          type: ["integer", "null"]
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, volunteerId, title, message, type, isRead, createdAt]
+
+    SelfAssignBody:
+      type: object
+      properties:
+        needId:
+          type: integer
+      required: [needId]
+
+    UpdateVolunteerStatusBody:
+      type: object
+      properties:
+        availabilityStatus:
+          type: string
+          enum: [available, busy, on_task]
+      required: [availabilityStatus]
+
+    ResetPasswordBody:
+      type: object
+      properties:
+        temporaryPassword:
+          type: string
+      required: [temporaryPassword]
+
+    ResetPasswordResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        temporaryPassword:
+          type: ["string", "null"]
+        emailSent:
+          type: boolean
+      required: [ok, emailSent]
+
+    DeactivateVolunteerBody:
+      type: object
+      properties:
+        forceUnassign:
+          type: boolean
+      required: [forceUnassign]
+
+    DeactivateVolunteerResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        tasksUnassigned:
+          type: integer
+        activeTasks:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              title:
+                type: string
+              status:
+                type: string
+            required: [id, title, status]
+      required: [ok, tasksUnassigned, activeTasks]
+
+    CredentialLogEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        volunteerId:
+          type: integer
+        email:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+        errorMessage:
+          type: ["string", "null"]
+        performedBy:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, volunteerId, email, type, status, createdAt]
+
+    UpdateVolunteerProfileBody:
+      type: object
+      properties:
+        displayName:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        languages:
+          type: array
+          items:
+            type: string
+        availabilitySchedule:
+          type: ["object", "null"]
+          additionalProperties: true
+        profilePhoto:
+          type: ["string", "null"]
+        availabilityDays:
+          type: array
+          items:
+            type: string
+        availabilityStatus:
+          type: string
+        dailyOverride:
+          type: ["string", "null"]
+        dailyOverrideDate:
+          type: ["string", "null"]
+
+    UpdateCompletionNoteBody:
+      type: object
+      properties:
+        completionNote:
+          type: string
+      required: [completionNote]
+
+    UpdateTaskStatusBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [in_progress, completed]
+        completionNote:
+          type: ["string", "null"]
+      required: [status]
+
+    AuthMeResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/AuthUser"
+      required: [user]
+
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        organizationId:
+          type: ["integer", "null"]
+        volunteerId:
+          type: ["integer", "null"]
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        mustChangePassword:
+          type: boolean
+        isActive:
+          type: boolean
+      required: [id, name, email, role, mustChangePassword, isActive]
+
+    AuthUserResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/AuthUser"
+      required: [user]
+
+    LoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        role:
+          type: ["string", "null"]
+      required: [email, password]
+
+    ChangePasswordBody:
+      type: object
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+      required: [currentPassword, newPassword]
+
+    VolunteerStats:
+      type: object
+      properties:
+        tasksAssigned:
+          type: integer
+        tasksInProgress:
+          type: integer
+        tasksCompleted:
+          type: integer
+        peopleHelped:
+          type: integer
+        availabilityStatus:
+          type: string
+      required: [tasksAssigned, tasksInProgress, tasksCompleted, peopleHelped, availabilityStatus]

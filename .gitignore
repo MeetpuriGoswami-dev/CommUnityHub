@@ -1,0 +1,65 @@
+# Environment variables — NEVER commit these
+.env
+.env.local
+.env.production
+.env.development
+**/.env
+**/.env.local
+**/.env.production
+# Allow .env.example
+!**/.env.example
+
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build output
+dist/
+**/dist/
+build/
+**/build/
+.next/
+out/
+**/public/dist/
+
+# Database
+*.db
+*.sqlite
+**/drizzle/meta/**
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor & Build Artifacts
+.vscode/
+.idea/
+*.swp
+**/*.tsbuildinfo
+typecheck.log
+
+# Replit
+.replit
+replit.nix
+.cache/
+
+# SSL and certificates
+*.pem
+*.key
+*.cert
+*.p12
+
+# Any JSON key files from third-party services
+*-credentials.json
+*service-account.json
+firebase-adminsdk.json
+
+scratch/
+typecheck_output.txt
