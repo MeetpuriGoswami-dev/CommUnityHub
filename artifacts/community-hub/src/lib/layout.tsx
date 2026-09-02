@@ -388,7 +388,7 @@ export function AppLayout({ children }: LayoutProps) {
 
               {user?.role === "super_admin" && (
                 <div className="pt-4 flex flex-col gap-3">
-                  <Link href="/settings">
+                  <Link to="/settings">
                     <Button variant="outline" className="w-full">
                       Go to Organization Management
                     </Button>

@@ -455,7 +455,7 @@ export default function VolunteerProfile() {
                   {tasks.map((task: any) => (
                     <div key={task.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
                       <div>
-                        <Link href={`/needs/${task.id}`}>
+                        <Link to={`/needs/${task.id}` as any}>
                           <div className="font-medium hover:text-primary transition-colors">{task.title}</div>
                         </Link>
                         <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">

@@ -450,7 +450,7 @@ function RecentSubmissions({ organizationId }: { organizationId?: number }) {
                   {formatDistanceToNow(new Date(resp.createdAt), { addSuffix: true })}
                 </TableCell>
                 <TableCell className="text-right">
-                  <Link href={`/surveys/${resp.surveyId}?tab=responses`}>
+                  <Link to={`/surveys/${resp.surveyId}?tab=responses` as any}>
                     <Button variant="ghost" size="sm" className="h-8 text-primary font-medium hover:text-primary hover:bg-primary/5">
                       View
                     </Button>

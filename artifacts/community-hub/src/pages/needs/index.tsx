@@ -49,7 +49,7 @@ export default function NeedsList() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">{t("nav.needs")}</h1>
-        <Link href="/needs/new">
+        <Link to="/needs/new">
           <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="mr-2 h-4 w-4" /> Report Need
           </Button>

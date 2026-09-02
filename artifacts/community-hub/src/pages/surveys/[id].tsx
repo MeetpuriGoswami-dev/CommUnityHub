@@ -275,7 +275,7 @@ export default function SurveyDetail() {
       <nav className="fixed top-0 left-0 right-0 h-28 bg-white border-b z-50 flex flex-col pt-2 shadow-sm">
         <div className="flex items-center justify-between px-4 sm:px-6 h-14">
           <div className="flex items-center gap-4">
-            <Link href="/surveys">
+            <Link to="/surveys">
               <Button variant="ghost" size="icon"><ArrowLeft /></Button>
             </Link>
             <div className="flex items-center gap-2">

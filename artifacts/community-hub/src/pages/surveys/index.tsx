@@ -24,7 +24,7 @@ export default function SurveysList() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-3xl font-bold tracking-tight">{t("nav.surveys")}</h1>
-        <Link href="/surveys/new">
+        <Link to="/surveys/new">
           <Button className="bg-[#4CAF50] hover:bg-[#43a047]">
             <Plus className="mr-2 h-4 w-4" /> Create Survey
           </Button>
@@ -97,7 +97,7 @@ export default function SurveysList() {
                   return (
                     <TableRow key={survey.id} className="group hover:bg-muted/30 transition-colors">
                       <TableCell className="font-medium">
-                        <Link href={`/surveys/${survey.id}`}>
+                        <Link to={`/surveys/${survey.id}` as any}>
                           <div className="flex flex-col cursor-pointer">
                             <span className="text-base group-hover:text-primary transition-colors">{survey.title}</span>
                             <span className="text-xs text-muted-foreground font-normal line-clamp-1">{survey.description || "No description"}</span>
@@ -141,12 +141,12 @@ export default function SurveysList() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <Link href={`/surveys/${survey.id}`}>
+                          <Link to={`/surveys/${survey.id}` as any}>
                             <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary" title="Edit Questions">
                               <Edit2 className="h-4 w-4" />
                             </Button>
                           </Link>
-                          <Link href={`/surveys/${survey.id}?tab=responses`}>
+                          <Link to={`/surveys/${survey.id}?tab=responses` as any}>
                              <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-[#4CAF50]" title="View Analytics">
                                <BarChart3 className="h-4 w-4" />
                              </Button>
@@ -164,7 +164,7 @@ export default function SurveysList() {
                   <div className="flex flex-col items-center gap-3">
                     <FileText className="h-10 w-10 opacity-20" />
                     <p>No surveys created yet. Start by creating a data collection form.</p>
-                    <Link href="/surveys/new">
+                    <Link to="/surveys/new">
                       <Button variant="outline" size="sm">Create your first survey</Button>
                     </Link>
                   </div>
