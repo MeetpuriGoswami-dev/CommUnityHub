@@ -6,10 +6,13 @@
  * No cold-start delays — Vercel Functions boot in <200ms.
  */
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import app from "../artifacts/api-server/src/app.js";
+import app from "../artifacts/api-server/src/app.ts";
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
-  // Vercel's VercelRequest/VercelResponse are compatible with Node's IncomingMessage/ServerResponse
-  // which Express accepts natively.
-  return app(req as any, res as any);
+  try {
+    return app(req as any, res as any);
+  } catch (err: any) {
+    console.error("Vercel Serverless Handler Error:", err);
+    res.status(500).json({ error: "serverless_error", message: err?.message || String(err) });
+  }
 }
