@@ -4,15 +4,15 @@ import * as schema from "./schema/index.ts";
 
 const { Pool } = pg;
 
+const dbUrl = process.env.DATABASE_URL || "postgresql://postgres:MGoswami%408102007@db.oqudkdsbywkovgcpcvxt.supabase.co:5432/postgres";
+
 if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+  console.warn("WARNING: DATABASE_URL environment variable was not found in environment. Using default Supabase database connection.");
 }
 
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  connectionString: dbUrl,
+  ssl: dbUrl.includes("localhost") ? false : { rejectUnauthorized: false },
 });
 export const db = drizzle(pool, { schema });
 
