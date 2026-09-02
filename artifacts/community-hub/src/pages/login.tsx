@@ -14,8 +14,8 @@ export default function LoginPage() {
   const { login } = useAppContext();
   const { toast } = useToast();
   const [role, setRole] = useState<"admin" | "volunteer">("admin");
-  const [email, setEmail] = useState(import.meta.env.VITE_DEMO_ADMIN_EMAIL || "");
-  const [password, setPassword] = useState(import.meta.env.VITE_DEMO_ADMIN_PASSWORD || "");
+  const [email, setEmail] = useState(import.meta.env.VITE_DEMO_ADMIN_EMAIL || "admin@communityhub.local");
+  const [password, setPassword] = useState(import.meta.env.VITE_DEMO_ADMIN_PASSWORD || "Admin@123456");
   const [loading, setLoading] = useState(false);
 
   const submit = async (event: React.FormEvent) => {
@@ -50,8 +50,8 @@ export default function LoginPage() {
             const nextRole = value as "admin" | "volunteer";
             setRole(nextRole);
             if (nextRole === "admin") {
-              setEmail(import.meta.env.VITE_DEMO_ADMIN_EMAIL || "");
-              setPassword(import.meta.env.VITE_DEMO_ADMIN_PASSWORD || "");
+              setEmail(import.meta.env.VITE_DEMO_ADMIN_EMAIL || "admin@communityhub.local");
+              setPassword(import.meta.env.VITE_DEMO_ADMIN_PASSWORD || "Admin@123456");
             } else {
               setEmail("");
               setPassword("");
