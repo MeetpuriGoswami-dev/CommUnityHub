@@ -17,7 +17,7 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   });
   const data = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(data?.error ?? `Request failed with status ${response.status}`);
+    throw new Error(data?.message || data?.error || `Request failed with status ${response.status}`);
   }
   return data as T;
 }

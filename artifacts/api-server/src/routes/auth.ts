@@ -60,38 +60,43 @@ router.get("/auth/me", async (req, res): Promise<void> => {
 });
 
 router.post("/auth/login", async (req, res): Promise<void> => {
-  await ensureBootstrapAdmin();
-  const email = String(req.body.email ?? "").trim().toLowerCase();
-  const password = String(req.body.password ?? "");
-  const expectedRole = req.body.role ? String(req.body.role) : null;
-  if (!email || !password) {
-    res.status(400).json({ error: "Email and password are required" });
-    return;
-  }
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
-  if (!user || !user.isActive || !(await verifyPassword(password, user.passwordHash))) {
-    res.status(401).json({ error: "Invalid credentials" });
-    return;
-  }
-
-  // Check if organization is active
-  if (user.organizationId) {
-    const [org] = await db.select().from(organizationsTable).where(eq(organizationsTable.id, user.organizationId));
-    if (org && !org.isActive) {
-      res.status(403).json({ error: "Organization account is deactivated. Please contact your coordinator." });
+  try {
+    await ensureBootstrapAdmin();
+    const email = String(req.body?.email ?? "").trim().toLowerCase();
+    const password = String(req.body?.password ?? "");
+    const expectedRole = req.body?.role ? String(req.body.role) : null;
+    if (!email || !password) {
+      res.status(400).json({ error: "Email and password are required" });
       return;
     }
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
+    if (!user || !user.isActive || !(await verifyPassword(password, user.passwordHash))) {
+      res.status(401).json({ error: "Invalid credentials" });
+      return;
+    }
+
+    // Check if organization is active
+    if (user.organizationId) {
+      const [org] = await db.select().from(organizationsTable).where(eq(organizationsTable.id, user.organizationId));
+      if (org && !org.isActive) {
+        res.status(403).json({ error: "Organization account is deactivated. Please contact your coordinator." });
+        return;
+      }
+    }
+    if (expectedRole === "volunteer" && user.role !== "volunteer") {
+      res.status(403).json({ error: "Use the admin login for this account" });
+      return;
+    }
+    if (expectedRole === "admin" && user.role === "volunteer") {
+      res.status(403).json({ error: "Use the volunteer login for this account" });
+      return;
+    }
+    setSessionCookie(res, user.id);
+    res.json({ user: publicUser(user) });
+  } catch (err: any) {
+    console.error("Login route error:", err);
+    res.status(500).json({ error: "server_error", message: err?.message || "Internal server error during login" });
   }
-  if (expectedRole === "volunteer" && user.role !== "volunteer") {
-    res.status(403).json({ error: "Use the admin login for this account" });
-    return;
-  }
-  if (expectedRole === "admin" && user.role === "volunteer") {
-    res.status(403).json({ error: "Use the volunteer login for this account" });
-    return;
-  }
-  setSessionCookie(res, user.id);
-  res.json({ user: publicUser(user) });
 });
 
 router.post("/auth/logout", async (_req, res): Promise<void> => {

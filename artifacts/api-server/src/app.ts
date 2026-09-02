@@ -9,6 +9,9 @@ import { logger } from "./lib/logger";
 
 const app: Express = express();
 
+// Trust Vercel / reverse proxy headers
+app.set("trust proxy", 1);
+
 // Security Headers
 app.use(helmet());
 app.disable("x-powered-by");
