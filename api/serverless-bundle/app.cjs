@@ -155857,10 +155857,9 @@ async function ensureBootstrapAdmin() {
         mustChangePassword: false,
         isActive: true
       });
-    } else if (existing.role !== "super_admin" || existing.email === "admin@communityhub.local") {
+    } else if (existing.role !== "super_admin") {
       await db.update(usersTable).set({
-        role: "super_admin",
-        passwordHash: await hashPassword(bootstrapAdminPassword)
+        role: "super_admin"
       }).where(eq(usersTable.id, existing.id));
     }
   } catch (err) {

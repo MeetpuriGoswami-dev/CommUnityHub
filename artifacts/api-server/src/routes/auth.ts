@@ -41,11 +41,10 @@ async function ensureBootstrapAdmin() {
         mustChangePassword: false,
         isActive: true,
       });
-    } else if (existing.role !== "super_admin" || existing.email === "admin@communityhub.local") {
-      // Force upgrade to super_admin AND reset password to ensure access
+    } else if (existing.role !== "super_admin") {
+      // Upgrade to super_admin only if not already
       await db.update(usersTable).set({
         role: "super_admin",
-        passwordHash: await hashPassword(bootstrapAdminPassword)
       }).where(eq(usersTable.id, existing.id));
     }
   } catch (err) {
