@@ -14,6 +14,7 @@ async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
   await rm(distDir, { recursive: true, force: true });
 
+  // Main ESM build for standalone server
   await esbuild({
     entryPoints: [
       path.resolve(artifactDir, "src/index.ts"),
@@ -121,6 +122,35 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
     `,
     },
   });
+
+  // Vercel serverless build: bundle app as CJS into api/serverless-bundle/
+  const vercelBundleDir = path.resolve(artifactDir, "../../api/serverless-bundle");
+  await esbuild({
+    entryPoints: [path.resolve(artifactDir, "src/app.ts")],
+    platform: "node",
+    bundle: true,
+    format: "cjs",
+    outdir: vercelBundleDir,
+    entryNames: "[name]",
+    outExtension: { ".js": ".cjs" },
+    logLevel: "info",
+    external: [
+      "*.node",
+      "sharp",
+      "better-sqlite3",
+      "sqlite3",
+      "canvas",
+      "bcrypt",
+      "argon2",
+      "fsevents",
+      "pg-native",
+    ],
+    plugins: [
+      esbuildPluginPino({ transports: ["pino-pretty"] })
+    ],
+  });
+
+  console.log("Vercel serverless bundle written to api/serverless-bundle/");
 }
 
 buildAll().catch((err) => {
