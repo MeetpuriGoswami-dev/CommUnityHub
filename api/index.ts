@@ -6,7 +6,7 @@
  * No cold-start delays — Vercel Functions boot in <200ms.
  */
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import app from "../artifacts/api-server/src/app.ts";
+import app from "../artifacts/api-server/dist/app.mjs";
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   try {

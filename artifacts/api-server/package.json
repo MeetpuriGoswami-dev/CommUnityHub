@@ -3,10 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "main": "src/app.ts",
+  "main": "./dist/app.mjs",
   "exports": {
-    ".": "./src/app.ts",
-    "./app": "./src/app.ts"
+    ".": "./dist/app.mjs",
+    "./app": "./dist/app.mjs"
   },
   "scripts": {
     "dev": "pnpm run build && pnpm run start",
