@@ -153470,11 +153470,18 @@ var insertNeedAttachmentSchema = createInsertSchema(needAttachmentsTable).omit({
 var { Pool: Pool3 } = esm_default;
 var dbUrl = process.env.DATABASE_URL || "postgresql://postgres:MGoswami%408102007@db.oqudkdsbywkovgcpcvxt.supabase.co:5432/postgres";
 if (!process.env.DATABASE_URL) {
-  console.warn("WARNING: DATABASE_URL environment variable was not found in environment. Using default Supabase database connection.");
+  console.warn("WARNING: DATABASE_URL not set in environment, using hardcoded fallback.");
 }
 var pool = new Pool3({
   connectionString: dbUrl,
-  ssl: dbUrl.includes("localhost") ? false : { rejectUnauthorized: false }
+  ssl: dbUrl.includes("localhost") ? false : { rejectUnauthorized: false },
+  // Serverless-friendly pool settings
+  max: 3,
+  idleTimeoutMillis: 1e4,
+  connectionTimeoutMillis: 5e3
+});
+pool.on("error", (err) => {
+  console.error("pg pool error:", err.message);
 });
 var db = drizzle(pool, { schema: schema_exports });
 
