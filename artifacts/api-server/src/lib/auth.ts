@@ -4,11 +4,13 @@ import { eq } from "drizzle-orm";
 import { db, usersTable, organizationsTable } from "@workspace/db";
 
 const cookieName = "community_hub_session";
-const secret = process.env.SESSION_SECRET;
+const configuredSecret = process.env.SESSION_SECRET;
 
-if (!secret || secret.length < 32) {
+if (!configuredSecret || configuredSecret.length < 32) {
   throw new Error("SESSION_SECRET must be configured with at least 32 characters.");
 }
+
+const secret: string = configuredSecret;
 
 export type PublicUser = {
   id: number;

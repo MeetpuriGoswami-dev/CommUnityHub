@@ -4,11 +4,13 @@ import { db, usersTable, volunteersTable, organizationsTable } from "@workspace/
 import { clearSessionCookie, getCurrentUser, hashPassword, publicUser, setSessionCookie, verifyPassword } from "../lib/auth.ts";
 
 const router: IRouter = Router();
-const bootstrapAdminPassword = process.env.BOOTSTRAP_ADMIN_PASSWORD;
+const configuredBootstrapAdminPassword = process.env.BOOTSTRAP_ADMIN_PASSWORD;
 
-if (!bootstrapAdminPassword || bootstrapAdminPassword.length < 12) {
+if (!configuredBootstrapAdminPassword || configuredBootstrapAdminPassword.length < 12) {
   throw new Error("BOOTSTRAP_ADMIN_PASSWORD must be configured with at least 12 characters.");
 }
+
+const bootstrapAdminPassword: string = configuredBootstrapAdminPassword;
 
 async function ensureBootstrapAdmin() {
   const existingOrg = await db.select().from(organizationsTable).where(eq(organizationsTable.id, 1));
